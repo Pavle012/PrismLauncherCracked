@@ -115,11 +115,17 @@ LaunchDecision LaunchController::decideLaunchMode()
         return LaunchDecision::Continue;
     }
 
+    // Allow offline accounts to launch directly in offline mode
+    if (m_accountToUse->accountType() == AccountType::Offline) {
+        m_actualLaunchMode = LaunchMode::Offline;
+        return LaunchDecision::Continue;
+    }
+
     const auto* accounts = APPLICATION->accounts();
     MinecraftAccountPtr accountToCheck = nullptr;
 
-    if (m_accountToUse->accountType() != AccountType::Offline) {
-        accountToCheck = m_accountToUse->ownsMinecraft() ? m_accountToUse : nullptr;
+    if (m_accountToUse->ownsMinecraft()) {
+        accountToCheck = m_accountToUse;
     } else if (const auto defaultAccount = accounts->defaultAccount(); defaultAccount && defaultAccount->ownsMinecraft()) {
         accountToCheck = defaultAccount;
     } else {
