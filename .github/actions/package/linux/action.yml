@@ -138,26 +138,31 @@ runs:
       shell: bash
       env:
         BUILD_DIR: build
-        INSTALL_DIR: install
+        INSTALL_DEB_DIR: install-deb
       run: |
-        DEB_PACKAGE_DIR="PrismLauncher_${{ inputs.version }}-1_${{ env.APPIMAGE_ARCH == 'aarch64' && 'arm64' || 'amd64' }}"
+        # Install files for deb packaging
+        cmake --install ${{ env.BUILD_DIR }} --config ${{ inputs.build-type }} --prefix ${{ env.INSTALL_DEB_DIR }}
+        
+        DEB_ARCH="${{ env.APPIMAGE_ARCH == 'aarch64' && 'arm64' || 'amd64' }}"
+        DEB_PACKAGE_DIR="PrismLauncher_${{ inputs.version }}-1_${DEB_ARCH}"
         mkdir -p "$DEB_PACKAGE_DIR/DEBIAN"
         
-        # Copy installed files
-        cp -r ${{ env.INSTALL_DIR }}/. "$DEB_PACKAGE_DIR/usr/"
+        # Copy installed files to proper deb structure
+        mkdir -p "$DEB_PACKAGE_DIR/usr"
+        cp -r ${{ env.INSTALL_DEB_DIR }}/. "$DEB_PACKAGE_DIR/usr/"
         
         # Create control file
         cat > "$DEB_PACKAGE_DIR/DEBIAN/control" << EOF
-        Package: prismlauncher
-        Version: ${{ inputs.version }}-1
-        Architecture: ${{ env.APPIMAGE_ARCH == 'aarch64' && 'arm64' || 'amd64' }}
-        Maintainer: Prism Launcher <contact@prismlauncher.org>
-        Homepage: https://prismlauncher.org
-        Description: A custom Minecraft launcher with advanced features
-         Prism Launcher is a custom Minecraft launcher with modpack
-         management, multimc instance support, and more.
-        Depends: libc6, libstdc++6
-        EOF
+Package: prismlauncher
+Version: ${{ inputs.version }}-1
+Architecture: ${DEB_ARCH}
+Maintainer: Prism Launcher <contact@prismlauncher.org>
+Homepage: https://prismlauncher.org
+Description: A custom Minecraft launcher with advanced features
+ Prism Launcher is a custom Minecraft launcher with modpack
+ management, multimc instance support, and more.
+Depends: libc6, libstdc++6
+EOF
         
         # Build .deb package
         dpkg-deb --build "$DEB_PACKAGE_DIR" "PrismLauncher-${{ inputs.artifact-name }}-${{ inputs.version }}-${{ inputs.build-type }}-${{ env.APPIMAGE_ARCH }}.deb"
