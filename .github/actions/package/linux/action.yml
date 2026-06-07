@@ -160,18 +160,18 @@ runs:
         mkdir -p "$DEB_PACKAGE_DIR/usr"
         cp -r "$INSTALL_DEB_DIR"/. "$DEB_PACKAGE_DIR/usr/"
 
-        # Create control file
-        cat > "$DEB_PACKAGE_DIR/DEBIAN/control" << EOF
-Package: prismlauncher
-Version: ${VERSION}-1
-Architecture: ${DEB_ARCH}
-Maintainer: Prism Launcher <contact@prismlauncher.org>
-Homepage: https://prismlauncher.org
-Description: A custom Minecraft launcher with advanced features
- Prism Launcher is a custom Minecraft launcher with modpack
- management, multimc instance support, and more.
-Depends: libc6, libstdc++6
-EOF
+        # Create control file (use printf to avoid heredoc/template parsing issues)
+        printf '%s\n' \
+          "Package: prismlauncher" \
+          "Version: ${VERSION}-1" \
+          "Architecture: ${DEB_ARCH}" \
+          "Maintainer: Prism Launcher <contact@prismlauncher.org>" \
+          "Homepage: https://prismlauncher.org" \
+          "Description: A custom Minecraft launcher with advanced features" \
+          " Prism Launcher is a custom Minecraft launcher with modpack" \
+          " management, multimc instance support, and more." \
+          "Depends: libc6, libstdc++6" \
+          > "$DEB_PACKAGE_DIR/DEBIAN/control"
 
         # Build .deb package
         dpkg-deb --build "$DEB_PACKAGE_DIR" "PrismLauncher-${ARTIFACT_NAME}-${VERSION}-${BUILD_TYPE}-${APPIMAGE_ARCH}.deb"
