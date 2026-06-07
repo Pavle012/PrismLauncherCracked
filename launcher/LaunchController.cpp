@@ -92,18 +92,17 @@ void LaunchController::decideAccount()
     }
 
     if (!m_accountToUse && accounts->count() > 0) {
-        // If no default account is set, ask the user which one to use.
-        ProfileSelectDialog selectDialog(tr("Which account would you like to use?"), ProfileSelectDialog::GlobalDefaultCheckbox,
-                                         m_parentWidget);
+        // If no default account is set, pick one automatically.
+        // Prefer an offline account so launch doesn't require Microsoft login.
+        for (int i = 0; i < accounts->count(); i++) {
+            if (accounts->at(i)->accountType() == AccountType::Offline) {
+                m_accountToUse = accounts->at(i);
+                break;
+            }
+        }
 
-        selectDialog.exec();
-
-        // Launch the instance with the selected account.
-        m_accountToUse = selectDialog.selectedAccount();
-
-        // If the user said to use the account as default, do that.
-        if (selectDialog.useAsGlobalDefault() && m_accountToUse) {
-            accounts->setDefaultAccount(m_accountToUse);
+        if (!m_accountToUse) {
+            m_accountToUse = accounts->at(0);
         }
     }
 }
