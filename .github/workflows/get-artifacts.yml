@@ -1,0 +1,44 @@
+name: Get Build Artifacts
+
+on:
+  workflow_dispatch:
+    inputs:
+      build-type:
+        description: Type of build (Debug or Release)
+        type: string
+        default: Debug
+      environment:
+        description: Deployment environment to run under
+        type: string
+        default: ''
+
+permissions: {}
+
+jobs:
+  build:
+    name: Build and Package
+    uses: ./.github/workflows/build.yml
+    with:
+      build-type: ${{ github.event.inputs.build-type }}
+      environment: ${{ github.event.inputs.environment }}
+    permissions:
+      contents: read
+      id-token: write
+      packages: write
+    secrets: inherit
+
+  download_artifacts:
+    name: Download Build Artifacts
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v8
+        with:
+          path: ./artifacts
+
+      - name: List downloaded artifacts
+        run: |
+          find ./artifacts -type f | sort
