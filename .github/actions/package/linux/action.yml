@@ -153,7 +153,13 @@ runs:
           DEB_ARCH=amd64
         fi
 
-        DEB_PACKAGE_DIR="PrismLauncher_${VERSION}-1_${DEB_ARCH}"
+        # Ensure version starts with a digit for Debian compatibility
+        DEB_VERSION="${VERSION}"
+        if [[ "$DEB_VERSION" =~ ^[a-fA-F] ]]; then
+          DEB_VERSION="0${DEB_VERSION}"
+        fi
+
+        DEB_PACKAGE_DIR="PrismLauncher_${DEB_VERSION}-1_${DEB_ARCH}"
         mkdir -p "$DEB_PACKAGE_DIR/DEBIAN"
 
         # Copy installed files to proper deb structure
@@ -163,7 +169,7 @@ runs:
         # Create control file (use printf to avoid heredoc/template parsing issues)
         printf '%s\n' \
           "Package: prismlauncher" \
-          "Version: ${VERSION}-1" \
+          "Version: ${DEB_VERSION}-1" \
           "Architecture: ${DEB_ARCH}" \
           "Maintainer: Prism Launcher <contact@prismlauncher.org>" \
           "Homepage: https://prismlauncher.org" \
@@ -174,7 +180,7 @@ runs:
           > "$DEB_PACKAGE_DIR/DEBIAN/control"
 
         # Build .deb package
-        dpkg-deb --build "$DEB_PACKAGE_DIR" "PrismLauncher-${ARTIFACT_NAME}-${VERSION}-${BUILD_TYPE}-${APPIMAGE_ARCH}.deb"
+        dpkg-deb --build "$DEB_PACKAGE_DIR" "PrismLauncher-${ARTIFACT_NAME}-${DEB_VERSION}-${BUILD_TYPE}-${APPIMAGE_ARCH}.deb"
         ls -lh PrismLauncher-*.deb
 
     - name: Upload binary tarball
